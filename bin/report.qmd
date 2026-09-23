@@ -488,22 +488,20 @@ Following transcriptome assembly with **Bambu** [^1], the extended annotations a
 [^1]: Chen, Ying, et al. "Context-aware transcript quantification from long-read RNA-seq data with Bambu." Nature methods 20.8 (2023): 1187-1195. https://doi.org/10.1038/s41592-023-01908-w
 
 1.  Genes and transcripts with zero counts across all samples were removed, yielding filtered quantification files stored in the `bambu_filter/` results directory.
-2.  Novel transcript isoforms were compared against the reference annotation using **GffCompare** [^2] and assessed for coding potential using **CPC2** [^3] or **RNAmining** [^4], depending on the selected workflow. Isoforms were subsequently classified according to their GffCompare class code, coding-potential prediction, and the biotype of the associated reference gene.
-3.  Transcript structural features, including exon composition and transcript architecture, were characterized directly from the reference annotation and assembled GTF files using **rtracklayer** [^5].
+2.  Novel transcript isoforms were compared against the reference annotation using **GffCompare** [^2] and assessed for coding potential using **CPC2** [^3]. Isoforms were subsequently classified according to their GffCompare class code, coding-potential prediction, and the biotype of the associated reference gene.
+3.  Transcript structural features, including exon composition and transcript architecture, were characterized directly from the reference annotation and assembled GTF files using **rtracklayer** [^4].
 4.  Annotation files (GFT) and count matrices were restricted to the curated transcript set, and transcript classification and biotype information were incorporated into the final annotations.
 5.  Principal Component Analysis (PCA) and expression heatmaps of Bambu were regenerated using the curated transcriptome, enabling direct comparison with the corresponding results obtained from the initial assembly.
-6.  Per-base coverage profiles were exported as BigWig tracks for each sample, and selected genomic loci were visualized alongside transcript models using **plotgardener** [^6].
+6.  Per-base coverage profiles were exported as BigWig tracks for each sample, and selected genomic loci were visualized alongside transcript models using **plotgardener** [^5].
 7.  Finally, annotations, expression matrices, and transcript characterization metrics were consolidated into standardized metadata tables to facilitate downstream analyses. Summary statistics of the curated assembly are presented throughout the following sections of this report.
 
 [^2]: Pertea, Geo, and Mihaela Pertea. "GFF utilities: GffRead and GffCompare." F1000Research 9 (2020): ISCB-Comm. https://doi.org/10.12688/f1000research.23297.1
 
 [^3]: Kang, Yu-Jian, et al. "CPC2: a fast and accurate coding potential calculator based on sequence intrinsic features." Nucleic Acids Research 45.W1 (2017): W12-W16. https://doi.org/10.1093/nar/gkx428
 
-[^4]: Ramos, Thaís AR, et al. "RNAmining: A machine learning stand-alone and web server tool for RNA coding potential prediction." F1000Research 10 (2021): 323. https://doi.org/10.12688/f1000research.52350.2
+[^4]: Lawrence, Michael, Robert Gentleman, and Vincent Carey. "rtracklayer: an R package for interfacing with genome browsers." Bioinformatics 25.14 (2009): 1841-1842. https://doi.org/10.1093/bioinformatics/btp328
 
-[^5]: Lawrence, Michael, Robert Gentleman, and Vincent Carey. "rtracklayer: an R package for interfacing with genome browsers." Bioinformatics 25.14 (2009): 1841-1842. https://doi.org/10.1093/bioinformatics/btp328
-
-[^6]: Kramer, Nicole E., et al. "Plotgardener: cultivating precise multi-panel figures in R." Bioinformatics 38.7 (2022): 2042-2045. https://doi.org/10.1093/bioinformatics/btac057
+[^5]: Kramer, Nicole E., et al. "Plotgardener: cultivating precise multi-panel figures in R." Bioinformatics 38.7 (2022): 2042-2045. https://doi.org/10.1093/bioinformatics/btac057
 
 The final validated outputs are provided in the `bambu_validated`, `novel_transcripts`, and `ref_transcripts` directories. Per-sample coverage tracks are available in `coverage/` as BigWig files, while genomic context visualizations can be found in `genomic_context/`.
 
@@ -600,9 +598,9 @@ To address this limitation, pulposeq implements a dual-layer classification stra
 
 As a result, a transcript lacking coding potential is classified as a **novel lncRNA** even when it originates from a previously annotated protein-coding locus or another gene biotype. This approach distinguishes locus annotation from transcript identity and enables a more accurate representation of transcriptional complexity.
 
-The classification framework follows current recommendations proposed by Mattick and colleagues [^7] for the annotation and nomenclature of lncRNAs.
+The classification framework follows current recommendations proposed by Mattick and colleagues [^6] for the annotation and nomenclature of lncRNAs.
 
-[^7]: Mattick, J.S., Amaral, P.P., Carninci, P. et al. Long non-coding RNAs: definitions, functions, challenges and recommendations. Nat Rev Mol Cell Biol 24, 430–447 (2023). https://doi.org/10.1038/s41580-022-00566-8
+[^6]: Mattick, J.S., Amaral, P.P., Carninci, P. et al. Long non-coding RNAs: definitions, functions, challenges and recommendations. Nat Rev Mol Cell Biol 24, 430–447 (2023). https://doi.org/10.1038/s41580-022-00566-8
 
 #### Why the report says *candidate*
 
@@ -1508,7 +1506,7 @@ Unless otherwise stated, all counts reported in this section refer to **candidat
 >
 > - **GFFRead** converts transcript annotations from GTF format into transcript sequences in FASTA format using the reference genome sequence.
 > - **GFFCompare** compares assembled transcript models against a reference annotation and assigns a classification code describing their structural relationship to known transcripts (e.g. novel isoforms, intronic transcripts, or intergenic transcripts).
-> - **CPC2** and **RNAmining** evaluate the coding potential of transcript sequences and classify them as likely protein-coding or non-coding. CPC2 is used by default, while RNAmining is available as an alternative predictor.
+> - **CPC2** evaluates the coding potential of transcript sequences and classifies them as likely protein-coding or non-coding.
 
 ### Biotypes and Classification
 
