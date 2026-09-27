@@ -32,7 +32,7 @@ input:
       pattern: "*.tmap"
   - coding_predictions:
       type: file
-      description: CPC2 prediction table, tab-separated with a "#ID" header line; ID, label and coding_probability columns are required.
+      description: CPC2 prediction table, tab-separated with a "#ID" header line; ID, label, coding_probability, peptide_length, Fickett_score, pI and ORF_integrity columns are required.
       pattern: "*.txt"
   - tx_counts:
       type: file

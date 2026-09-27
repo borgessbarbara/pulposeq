@@ -379,7 +379,8 @@ Class_codes description figure below retrieved from the official [documentation]
 
 Coding potential is predicted by CPC2. The call it produced is recorded per
 transcript in the novel metadata as `prediction`, with `coding_prob` holding
-P(coding) and `coding_predictor` naming the tool.
+P(coding) and `coding_predictor` naming the tool. The features CPC2 based the call
+on follow as `peptide_length`, `Fickett_score`, `pI` and `ORF_integrity`.
 
 | File | Description |
 |------------------|------------------------------------------------------|

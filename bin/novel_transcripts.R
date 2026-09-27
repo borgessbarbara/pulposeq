@@ -76,8 +76,11 @@ cat("Loading coding-potential predictions...\n")
 #' CODING specifically, whichever label the row carries.
 #'
 #' Normalised here to prediction in {coding, non-coding} and coding_prob as
-#' P(coding). Columns are located by header name rather than position, because CPC2
-#' inserts ORF_Start when run with --ORF.
+#' P(coding). The features CPC2 based that call on -- peptide_length,
+#' Fickett_score, pI and ORF_integrity -- are carried through under CPC2's own
+#' names, so a call can be read against its evidence. transcript_length is dropped
+#' as it duplicates gffcompare's len. Columns are located by header name rather
+#' than position, because CPC2 inserts ORF_Start when run with --ORF.
 read_coding_predictions <- function(path) {
     lines <- readLines(path)
     hdr   <- grep("^#ID\t", lines)
@@ -101,7 +104,8 @@ read_coding_predictions <- function(path) {
     }
     names(d) <- cols
 
-    missing <- setdiff(c("ID", "label", "coding_probability"), names(d))
+    missing <- setdiff(c("ID", "label", "coding_probability", "peptide_length",
+                         "Fickett_score", "pI", "ORF_integrity"), names(d))
     if (length(missing)) {
         stop("CPC2 table ", path, " is missing column(s): ",
              paste(missing, collapse = ", "), ". Found: ",
@@ -114,6 +118,10 @@ read_coding_predictions <- function(path) {
         prediction       = ifelse(d$label == "coding", "coding", "non-coding"),
         coding_prob      = as.numeric(d$coding_probability),
         coding_predictor = "cpc2",
+        peptide_length   = as.integer(d$peptide_length),
+        Fickett_score    = as.numeric(d$Fickett_score),
+        pI               = as.numeric(d$pI),
+        ORF_integrity    = as.integer(d$ORF_integrity),
         stringsAsFactors = FALSE)
 }
 
@@ -133,7 +141,7 @@ tx_info$qry_gene_biotype <- unname(ref_gene_biotype[tx_info$qry_gene_id])
 tx_info <- dplyr::select(tx_info, seqnames, qry_id, ref_id,
                   qry_gene_id, qry_gene_name, qry_gene_biotype, ref_gene_id,
                   class_code, strand, start, end, len, num_exons, prediction, coding_prob,
-                  coding_predictor)
+                  coding_predictor, peptide_length, Fickett_score, pI, ORF_integrity)
 
 # Remove unstranded transcripts
 tx_info <- tx_info[tx_info$strand != "*", ]

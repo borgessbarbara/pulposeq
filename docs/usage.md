@@ -191,7 +191,8 @@ organism-agnostic and needs no species-specific model.
 
 Its output is published to `coding_potential/`, and every novel record carries a
 `coding_predictor` column naming the tool and a `coding_prob` column holding
-P(coding).
+P(coding), followed by the CPC2 features behind the call: `peptide_length`,
+`Fickett_score`, `pI` and `ORF_integrity`.
 
 ### Library type and strandedness
 
