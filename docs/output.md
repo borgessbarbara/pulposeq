@@ -701,7 +701,7 @@ quiet intron either side. The panel is the evidence.
 
 | File | Description |
 |--------------------------|----------------------------------------------|
-| `<sample>.bw` | Genome-wide coverage in bigWig format. Two to three orders of magnitude smaller than the alignments they come from, so this is the form of the data that travels off the cluster. Load them in IGV to explore any region beyond the windows the pipeline chose to draw. |
+| `<sample>.plus.bw`, `<sample>.minus.bw` | Genome-wide coverage in bigWig format, one file per strand (the format has no strand field). Two to three orders of magnitude smaller than the alignments they come from, so this is the form of the data that travels off the cluster. Load them in IGV to explore any region beyond the windows the pipeline chose to draw. |
 
 ## `pipeline_info/` (workflow run metadata)
 

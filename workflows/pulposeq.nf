@@ -127,7 +127,8 @@ workflow PULPOSEQ {
         // Per-sample coverage tracks. bigWig rather than BAM: plotgardener's
         // plotSignal cannot read BAM, and the tracks are two to three orders of
         // magnitude smaller than the alignments they come from, so they are also
-        // the only form of this data that travels off the cluster.
+        // the only form of this data that travels off the cluster. Written as one
+        // bigWig per strand, <id>.plus.bw and <id>.minus.bw.
         //
         BAM_COVERAGE (
             ALIGNMENT.out.bam.join(ALIGNMENT.out.index),
@@ -276,7 +277,7 @@ workflow PULPOSEQ {
         // lets plotTranscripts draw a coding region thicker than its UTRs.
         GENOMIC_CONTEXT (
             ANNOTATION.out.final_gtf,
-            BAM_COVERAGE.out.bigwig.map { _meta, bw -> bw }.collect(),
+            BAM_COVERAGE.out.bigwig.map { _meta, plus, minus -> [plus, minus] }.collect(),
             CURATE.out.counts_transcript_validated,
             CURATE.out.full_length_counts_transcript_validated,
             params.annotation,

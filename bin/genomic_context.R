@@ -8,7 +8,8 @@
 #   structure   the gene's (or host's) annotated exon footprint, collapsed to one row
 #   isoforms    every transcript in the window -- detected, novel, and annotated but
 #               not detected -- coloured by biotype and labelled with its status
-#   coverage    one track per sample, on a y range shared across samples
+#   coverage    one track per sample, on a y range shared across samples, with the +
+#               strand drawn above the baseline and the - strand mirrored below it
 #   axis        genomic coordinates
 #   legend      the biotypes this panel contains
 #
@@ -44,7 +45,11 @@ option_list <- list(
   make_option(c("-t", "--gtf"), type = "character", default = NULL,
               help = "Validated, enriched transcriptome GTF", metavar = "character"),
   make_option(c("-w", "--bigwigs"), type = "character", default = NULL,
-              help = "Comma-separated bigWig files, one per sample", metavar = "character"),
+              help = "Comma-separated + strand bigWig files (<prefix>.plus.bw), one per sample",
+              metavar = "character"),
+  make_option("--bigwigs_minus", type = "character", default = NULL,
+              help = "Comma-separated - strand bigWig files (<prefix>.minus.bw), same order as --bigwigs",
+              metavar = "character"),
   make_option(c("-s", "--names"), type = "character", default = NULL,
               help = "Comma-separated sample labels, same order as --bigwigs", metavar = "character"),
   make_option(c("-o", "--outdir"), type = "character", default = ".",
@@ -58,8 +63,8 @@ option_list <- list(
 )
 opt <- parse_args(OptionParser(option_list = option_list))
 
-if (is.null(opt$gtf) || is.null(opt$bigwigs)) {
-  stop("--gtf and --bigwigs are both required.", call. = FALSE)
+if (is.null(opt$gtf) || is.null(opt$bigwigs) || is.null(opt$bigwigs_minus)) {
+  stop("--gtf, --bigwigs and --bigwigs_minus are all required.", call. = FALSE)
 }
 dir.create(opt$outdir, showWarnings = FALSE, recursive = TRUE)
 
@@ -175,6 +180,11 @@ ORGDB <- NULL
 
 bw_files <- trimws(strsplit(opt$bigwigs, ",")[[1]])
 bw_files <- bw_files[nzchar(bw_files)]
+bw_minus <- trimws(strsplit(opt$bigwigs_minus, ",")[[1]])
+bw_minus <- bw_minus[nzchar(bw_minus)]
+if (length(bw_minus) != length(bw_files)) {
+  stop("--bigwigs_minus must have the same number of entries as --bigwigs.", call. = FALSE)
+}
 
 # Chromosome lengths for the ideogram, taken from the bigWig header rather than from
 # an assembly package: no extra input, no network, and it is guaranteed to agree with
@@ -186,7 +196,7 @@ chrom_lens <- tryCatch(
 sample_names <- if (!is.null(opt$names)) {
   trimws(strsplit(opt$names, ",")[[1]])
 } else {
-  sub("\\.bw$", "", basename(bw_files))
+  sub("(\\.plus)?\\.bw$", "", basename(bw_files))
 }
 if (length(sample_names) != length(bw_files)) {
   stop("--names must have the same number of entries as --bigwigs.", call. = FALSE)
@@ -1036,9 +1046,9 @@ draw_panel <- function(chrom, win_s, win_e, structure_gr, panel_tx,
                        title, subtitle, out_png, structure_label = "gene",
                        quantified = NULL) {
 
-  # A shared y range across samples, so track heights compare directly instead of
-  # each being rescaled to its own maximum.
-  peaks <- vapply(bw_files, function(f) {
+  # A shared y range across samples and both strands, so track heights compare
+  # directly instead of each being rescaled to its own maximum.
+  peaks <- vapply(c(bw_files, bw_minus), function(f) {
     sig <- rtracklayer::import.bw(
       f, which = GenomicRanges::GRanges(chrom, IRanges::IRanges(win_s, win_e)))
     if (length(sig) == 0) 0 else max(S4Vectors::mcols(sig)$score, na.rm = TRUE)
@@ -1055,7 +1065,8 @@ draw_panel <- function(chrom, win_s, win_e, structure_gr, panel_tx,
   gene_h   <- 0.26
   # The row pitch is ours, not plotgardener's, because every model is placed here.
   row_h    <- TX_ROW_H
-  sig_h    <- 0.55
+  # Taller than the 0.55 in unstranded track, since each strand now gets half of it.
+  sig_h    <- 0.90
   sig_lab_h <- 0.17        # band above each trace for its scale and sample name
   gap      <- 0.12
   label_h  <- 0.45
@@ -1218,12 +1229,20 @@ draw_panel <- function(chrom, win_s, win_e, structure_gr, panel_tx,
              fontface  = if (isTRUE(is_quant[i])) "bold" else "plain",
              fontcolor = if (isFALSE(is_quant[i])) "grey55" else "#1A1A1A",
              default.units = "inches")
+    # Given two files, plotSignal draws the first above the baseline and mirrors the
+    # second below it: + strand up, - strand down, on the same scale.
     plotSignal(
-      params = pars, data = bw_files[i],
+      params = pars, data = list(bw_files[i], bw_minus[i]),
       y = y + sig_lab_h, height = sig_h,
-      range = c(0, ymax),
-      linecolor = "#3B6FB6", fill = "#3B6FB6"
+      range = c(-ymax, ymax),
+      linecolor = c("#3B6FB6", "#C0504D"), fill = c("#3B6FB6", "#C0504D")
     )
+    plotText(label = "+", x = margin - 0.06, y = y + sig_lab_h + sig_h * 0.25,
+             just = c("right", "center"), fontsize = 8, fontcolor = "#3B6FB6",
+             default.units = "inches")
+    plotText(label = "−", x = margin - 0.06, y = y + sig_lab_h + sig_h * 0.75,
+             just = c("right", "center"), fontsize = 8, fontcolor = "#C0504D",
+             default.units = "inches")
     y <- y + sig_lab_h + sig_h + gap
   }
 
@@ -1236,18 +1255,28 @@ draw_panel <- function(chrom, win_s, win_e, structure_gr, panel_tx,
 
   # Only the biotypes this panel contains, so the key never explains a colour that is
   # not on screen.
+  #
+  # Drawn entry by entry rather than with plotLegend: in horizontal orientation
+  # plotLegend spreads the row's spare width evenly, including into the gap between
+  # each swatch and its text, so the icon ends up far from its label. Here each label
+  # sits right after its swatch and the next entry starts after the measured text.
   if (show_lgnd) {
-    per_row <- length(lgnd_rows[[1]])
+    sw <- 0.12               # swatch side
     ly <- y + label_h
     for (r in lgnd_rows) {
-      # Width proportional to the entries on this row, so a short final row keeps the
-      # same swatch spacing as a full one instead of stretching across the page.
-      plotLegend(
-        legend = r, fill = biotype_color(r), border = FALSE,
-        orientation = "h", fontsize = 7,
-        x = margin, y = ly, width = track_w * length(r) / per_row, height = 0.18,
-        just = c("left", "top"), default.units = "inches"
-      )
+      lx <- margin
+      for (k in seq_along(r)) {
+        plotRect(x = lx, y = ly + 0.09, width = sw, height = sw,
+                 just = c("left", "center"), default.units = "inches",
+                 fill = biotype_color(r[k]), linecolor = NA)
+        plotText(label = r[k], x = lx + sw + 0.05, y = ly + 0.09,
+                 just = c("left", "center"), fontsize = 7,
+                 default.units = "inches")
+        tw <- grid::convertWidth(
+          grid::grobWidth(grid::textGrob(r[k], gp = grid::gpar(fontsize = 7))),
+          "inches", valueOnly = TRUE)
+        lx <- lx + sw + 0.05 + tw + 0.25
+      }
       ly <- ly + 0.20
     }
   }

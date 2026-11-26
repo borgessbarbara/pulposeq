@@ -7,7 +7,7 @@ process GENOMIC_CONTEXT {
 
     input:
     path gtf_file      // validated, enriched transcriptome GTF
-    path bigwigs       // every sample's coverage track, collected
+    path bigwigs       // every sample's <id>.plus.bw and <id>.minus.bw, collected
     path counts        // validated transcript counts, one column per sample
     path fl_counts     // validated full-length transcript counts
     path annotation    // reference annotation, for annotated gene and intron structure
@@ -31,12 +31,17 @@ process GENOMIC_CONTEXT {
 
     script:
     def args      = task.ext.args ?: ''
-    def bw_list   = bigwigs.collect { bw -> bw.name }.join(',')
-    def name_list = bigwigs.collect { bw -> bw.name.replaceAll(/\.bw$/, '') }.join(',')
+    // Each sample's minus-strand file is named from its plus-strand file, so the
+    // pairing never depends on the order the collected files arrive in.
+    def plus       = bigwigs.findAll { bw -> bw.name.endsWith('.plus.bw') }.sort { bw -> bw.name }
+    def bw_list    = plus.collect { bw -> bw.name }.join(',')
+    def minus_list = plus.collect { bw -> bw.name.replaceAll(/\.plus\.bw$/, '.minus.bw') }.join(',')
+    def name_list  = plus.collect { bw -> bw.name.replaceAll(/\.plus\.bw$/, '') }.join(',')
     """
     Rscript $r_script \\
         --gtf ${gtf_file} \\
         --bigwigs ${bw_list} \\
+        --bigwigs_minus ${minus_list} \\
         --names ${name_list} \\
         --counts ${counts} \\
         --fl_counts ${fl_counts} \\

@@ -10,6 +10,11 @@
 #   2. Coverage is two to three orders of magnitude smaller than the alignments it
 #      derives from. A 30 GB ONT BAM becomes roughly 100-200 MB, which is what
 #      makes the tracks publishable and usable away from the cluster.
+#
+# Coverage is split by alignment strand and written as two bigWigs,
+# <prefix>.plus.bw and <prefix>.minus.bw. A bigWig holds one value per interval and
+# has no strand field, so a position covered on both strands cannot be stored in a
+# single file.
 
 suppressPackageStartupMessages({
   library(optparse)
@@ -22,7 +27,8 @@ option_list <- list(
   make_option(c("-b", "--bam"), type = "character", default = NULL,
               help = "Indexed BAM file", metavar = "character"),
   make_option(c("-p", "--prefix"), type = "character", default = NULL,
-              help = "Output basename; writes <prefix>.bw", metavar = "character"),
+              help = "Output basename; writes <prefix>.plus.bw and <prefix>.minus.bw",
+              metavar = "character"),
   make_option(c("-o", "--outdir"), type = "character", default = ".",
               help = "Output directory [default %default]", metavar = "character")
 )
@@ -65,16 +71,24 @@ cov <- lapply(names(lens), function(chr) {
 
     # An empty contig still needs a full-length zero track, or export.bw writes a
     # bigWig whose contig lengths disagree with the BAM header.
-    if (length(ga) == 0L) return(S4Vectors::Rle(0L, lens[[chr]]))
+    zero <- S4Vectors::Rle(0L, lens[[chr]])
+    if (length(ga) == 0L) return(list(plus = zero, minus = zero))
 
-    GenomicAlignments::coverage(ga)[[chr]]
+    # Split on the alignment strand. A strand with no reads still comes back
+    # full-length, because coverage() sizes each contig from the header's seqinfo.
+    s <- as.character(BiocGenerics::strand(ga))
+    list(plus  = GenomicAlignments::coverage(ga[s == "+"])[[chr]],
+         minus = GenomicAlignments::coverage(ga[s == "-"])[[chr]])
 })
 names(cov) <- names(lens)
 
-cov <- IRanges::RleList(cov, compress = FALSE)
+for (s in c("plus", "minus")) {
+  cov_s <- IRanges::RleList(lapply(cov, `[[`, s), compress = FALSE)
+  names(cov_s) <- names(lens)
 
-out_bw <- file.path(opt$outdir, paste0(prefix, ".bw"))
-rtracklayer::export.bw(cov, out_bw)
+  out_bw <- file.path(opt$outdir, paste0(prefix, ".", s, ".bw"))
+  rtracklayer::export.bw(cov_s, out_bw)
 
-cat(sprintf("Wrote %s (%d contigs, %.1f MB)\n",
-            out_bw, length(cov), file.info(out_bw)$size / 1024^2))
+  cat(sprintf("Wrote %s (%d contigs, %.1f MB)\n",
+              out_bw, length(cov_s), file.info(out_bw)$size / 1024^2))
+}
