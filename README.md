@@ -17,7 +17,7 @@ We can describe each step of the workflow as follows:
 3.  Filtering and trimming ([chopper](https://github.com/wdecoster/chopper "wdecoster/chopper"))
 4.  Mapping to a genome reference ([minimap2](https://github.com/lh3/minimap2 "lh3/minimap2") and [samtools](https://github.com/samtools/samtools "samtools"))
 5.  Quality control of mapped reads ([NanoComp](https://github.com/wdecoster/nanocomp "wdecoster/nanocomp"))
-6.  Per-base coverage tracks as `bigWig`, one per sample ([rtracklayer](https://bioconductor.org/packages/release/bioc/html/rtracklayer.html) and [GenomicAlignments](https://bioconductor.org/packages/release/bioc/html/GenomicAlignments.html))
+6.  Per-base coverage tracks as `bigWig`, one per strand per sample ([rtracklayer](https://bioconductor.org/packages/release/bioc/html/rtracklayer.html) and [GenomicAlignments](https://bioconductor.org/packages/release/bioc/html/GenomicAlignments.html))
 7.  Transcriptome Assembly ([Bambu](https://www.bioconductor.org/packages/release/bioc/html/bambu.html))
 8.  Optionally, quantify every Bambu model again with bootstrap replicates, mapping the reads directly to the transcript sequences ([oarfish](https://github.com/COMBINE-lab/oarfish "COMBINE-lab/oarfish"), with `--run_oarfish true`). Its counts then decide which transcripts count as expressed
 9.  Filter transcripts once, before classification: novel models without a strand or shorter than 500 nt, and any transcript below `--min_total_counts` summed across all samples

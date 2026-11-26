@@ -17,8 +17,10 @@ process BAM_COVERAGE {
     path r_script
 
     output:
-    tuple val(meta), path("*.bw"), emit: bigwig
-    path "versions.yml"          , emit: versions
+    // One bigWig per strand: the format has no strand field, so + and - coverage
+    // cannot share a file.
+    tuple val(meta), path("*.plus.bw"), path("*.minus.bw"), emit: bigwig
+    path "versions.yml"                                , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -46,7 +48,8 @@ process BAM_COVERAGE {
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch ${prefix}.bw
+    touch ${prefix}.plus.bw
+    touch ${prefix}.minus.bw
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -1249,7 +1249,7 @@ Following transcriptome assembly with **Bambu** [^1], the extended annotations a
 3.  Transcript structural features, including exon composition and transcript architecture, were characterized directly from the reference annotation and assembled GTF files using **rtracklayer** [^5].
 4.  Annotation files (GFT) and count matrices were restricted to the curated transcript set, and transcript classification and biotype information were incorporated into the final annotations.
 5.  Transcript-level Principal Component Analysis (PCA) and expression heatmaps were drawn for every quantified model and for the curated transcriptome, from the same counts the filter used, enabling direct comparison between the two.
-6.  Per-base coverage profiles were exported as BigWig tracks for each sample, and selected genomic loci were visualized alongside transcript models using **plotgardener** [^6].
+6.  Per-base coverage profiles were exported as BigWig tracks for each sample, one per strand, and selected genomic loci were visualized alongside transcript models using **plotgardener** [^6].
 7.  Finally, annotations, expression matrices, and transcript characterization metrics were consolidated into standardized metadata tables to facilitate downstream analyses. Summary statistics of the curated assembly are presented throughout the following sections of this report.
 
 [^2]: Pertea, Geo, and Mihaela Pertea. "GFF utilities: GffRead and GffCompare." F1000Research 9 (2020): ISCB-Comm. https://doi.org/10.12688/f1000research.23297.1
@@ -1262,7 +1262,7 @@ Following transcriptome assembly with **Bambu** [^1], the extended annotations a
 
 [^7]: Zare Jousheghani, Zahra, Noor Pratap Singh, and Rob Patro. "Oarfish: Enhanced probabilistic modeling leads to improved accuracy in long read transcriptome quantification." Bioinformatics 41.Supplement_1 (2025): i304-i313. https://doi.org/10.1093/bioinformatics/btaf240
 
-The final curated outputs are provided in `transcriptome/curated/`, sorted into `annotation/`, `counts/`, `metadata/` and `plots/`. Per-sample coverage tracks are available in `coverage/` as BigWig files, while genomic context visualizations can be found in `genomic_context/`.
+The final curated outputs are provided in `transcriptome/curated/`, sorted into `annotation/`, `counts/`, `metadata/` and `plots/`. Per-sample coverage tracks are available in `coverage/` as BigWig files, one per strand, while genomic context visualizations can be found in `genomic_context/`.
 
 ::: callout-note
 ## Filtering criteria
